@@ -7,12 +7,14 @@
 //
 
 #import "ViewController.h"
-
+#import "FMDatabase.h"
 @interface ViewController ()
 
 @end
 
-@implementation ViewController
+@implementation ViewController {
+    
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -54,7 +56,29 @@
     NSLog(@"%@",result);
     
     
+    //4.sqlite
+    NSString *documentPath2 = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *filePath2 = [documentPath2 stringByAppendingPathComponent:@"test.sqlite"];
     
+    FMDatabase *db = [FMDatabase databaseWithPath:filePath2];
+    if (db.open) {
+        
+        //create table if not exists t_student (id integer pirmary key autoincrement, name text, age integer)
+        BOOL success = [db executeUpdate:@"create table if not exists t_person (id integer primary key autoincrement, name text, age integer)"];
+        if (success) {
+            NSLog(@"创建表成功！");
+        }else {
+            NSLog(@"创建表失败");
+        }
+    }else {
+        NSLog(@"打开失败");
+    }
+    
+    //"insert into t_person (name, age) value(?,?)",@"jack",@17
+    
+    [db executeUpdate:@"insert into t_person(name,age) values(?,?)",@"jack",@17];
+
+    [db executeUpdate:@"update t_person set name = 'jack' where age = 100"];
 }
 
 
