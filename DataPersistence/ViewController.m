@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "FMDatabase.h"
+#import "FMDatabaseQueue.h"
 @interface ViewController ()
 
 @end
@@ -75,10 +76,59 @@
     }
     
     //"insert into t_person (name, age) value(?,?)",@"jack",@17
-    
     [db executeUpdate:@"insert into t_person(name,age) values(?,?)",@"jack",@17];
 
-    [db executeUpdate:@"update t_person set name = 'jack' where age = 100"];
+    [db executeUpdate:@"update t_person set name = 'xujiapeng' where age = 17"];
+    
+    
+    FMResultSet *set  = [db executeQuery:@"select id,name,age from t_person"];
+    while (set.next) {
+        int id = [set intForColumnIndex:0];
+        NSString *name = [set stringForColumnIndex:1];
+        int age = [set intForColumnIndex:2];
+        
+        NSLog(@"%d,%@,%d",id,name,age);
+        
+    }
+    
+    //drop table if exists t_person
+    [db executeUpdate:@"delete from t_person where name = 'xujiapeng'"];
+    
+    FMResultSet *set1  = [db executeQuery:@"select id,name,age from t_person"];
+    while (set1.next) {
+        int id = [set1 intForColumnIndex:0];
+        NSString *name = [set1 stringForColumnIndex:1];
+        int age = [set1 intForColumnIndex:2];
+        
+        NSLog(@"%d,%@,%d",id,name,age);
+        
+    }
+    
+    //FMDatabase是线程不安全的，当FMDB数据存储想要使用多线程的时候，FMDatabaseQueue就派上用场了。
+    [self FMDBdatabaseQueueFunction];
+    
+}
+
+- (void)FMDBdatabaseQueueFunction {
+    NSString *documentPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    NSString *path = [documentPath stringByAppendingPathComponent:@"student.sqlite"];
+    
+    FMDatabaseQueue *dbQueue = [FMDatabaseQueue databaseQueueWithPath:path];
+    
+    [dbQueue inDatabase:^(FMDatabase *db) {
+        [db executeUpdate:@"create table if not exists t_student (id integer primary key autoincrement, name text, age integer)"];
+        [db executeQuery:@"insert into t_student(name,age) values(?,?)",@"xujiapeng",@26];
+        [db executeQuery:@"insert into t_student(name,age) values(?,?)",@"yangdan",@25];
+        
+        FMResultSet *set = [db executeQuery:@"select id,name,age from t_student"];
+        while (set.next) {
+            int id = [set intForColumnIndex:0];
+            NSString *name = [set stringForColumnIndex:1];
+            int age = [set intForColumnIndex:2];
+            NSLog(@"------%d, %@, %d",id,name,age);
+        }
+    }];
+    
 }
 
 
